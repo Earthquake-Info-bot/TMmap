@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>津波マップテスト</title>
+<title>津波マップv1.1.2</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -280,17 +280,46 @@ async function loadXML() {
 const portMap = await loadPortMaster();
 
     await updateStatus('XML取得中…');
-    //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ここを変更して情報元のURLを設定！！！！！！！！↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-    const res = await fetch('https://script.google.com/macros/s/AKfycbw1VUTUfHSuSI0lAzuZbU22_jIBYDGBTWoIcgAXPejlAJKYqJQhIWfBzaLDmkCecxtc/exec');
-    if(!res.ok) throw new Error('XML取得失敗: ' + res.status);
-    await updateStatus('XML取得完了');
+// ===== 情報元リンク自動取得 =====
+await updateStatus('情報元リンク取得中…');
 
-    const text = await res.text();
-    await updateStatus('XML文字列読み込み完了');
+const feedRes = await fetch('https://www.data.jma.go.jp/developer/xml/feed/eqvol.xml');
+if (!feedRes.ok) throw new Error('eqvol.xml 取得失敗');
 
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, 'text/xml');
-    await updateStatus('XMLパース完了');
+const feedText = await feedRes.text();
+const feedXml = new DOMParser().parseFromString(feedText, 'text/xml');
+
+// feed の url 要素を全部
+const entries = feedXml.getElementsByTagName('entry');
+
+let targetLink = '';
+
+for (let i = 0; i < entries.length; i++) {
+  const entry = entries[i];
+  const linkEl = entry.getElementsByTagName('link')[0];
+  const href = linkEl?.getAttribute('href') || '';
+
+  if (href.includes('VTSE41') || href.includes('VTSE51')) {
+    targetLink = href;
+    break;
+  }
+}
+
+if (!targetLink) {
+  throw new Error('VTSE41 / VTSE51 のリンクが見つかりません');
+}
+
+await updateStatus(`情報元リンク: ${targetLink}`);
+
+// 取得対象をこの link に変更する
+const res = await fetch(targetLink);
+if (!res.ok) throw new Error('XML取得失敗: ' + res.status);
+
+const text = await res.text();
+await updateStatus('XML文字列読み込み完了');
+
+const parser = new DOMParser();
+const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XMLパース完了');
 
     // ===== 津波観測点（最大波）描画 =====
     const OBS_NS = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
