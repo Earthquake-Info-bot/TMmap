@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>津波マップテスト</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; padding:0; }
+  #map { width: 100%; height: 100vh; z-index: 100;}
+
+  /* ステータスボックス */
+  #status-box {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: sans-serif;
+    font-size: 14px;
+    z-index: 10000;
+    pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  #status-box.hidden { opacity: 0; }
+  .miniMap-wrapper{
+    position: absolute;
+    z-index: 2000;
+  }
+  .miniMap-title{
+    text-align: center;
+    font-family: "Zen Maru Gothic", sans-serif;
+  }
+  #okinawaWrapper{
+    left: 485px;
+    top: 80px;
+  }
+  #ogasawaraWrapper{
+    right: 30px;
+    bottom: 40px;
+  }
+
+  .miniMap{
+    width: 200px;
+    height: 225px;
+    border: 2px solid #000;
+  }
+  #mapCredit {
+    position: absolute;
+    top: 5px;          /* 上1px */
+    right: 5px;        /* 右1px */
+    font-family: "Yu Gothic", "YuGothic", "Meiryo", sans-serif; /* 角ゴ */
+    font-size: 13px;
+    line-height: 1.3;
+    color: #333;
+    background: none;  /* 背景なし */
+    padding: 0;        /* 余白なし */
+    border-radius: 0;
+    z-index: 10000;
+    text-align: right;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div id="status-box">準備中…</div>
+<div id="map"></div>
+<div id="okinawaWrapper" class="miniMap-wrapper">
+  <div class="miniMap-title">沖縄</div>
+  <div id="okinawaMap" class="miniMap"></div>
+</div>
+<div id="ogasawaraWrapper" class="miniMap-wrapper">
+  <div class="miniMap-title">小笠原</div>
+  <div id="ogasawaraMap" class="miniMap"></div>
+</div>
+<div id="maxAlertBox" style="
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:#f00; /* 仮の色、JSで上書き */
+  color:#fff;      /* 仮の色、JSで上書き */
+  padding:4px 4px; /* 余白を狭く */
+  line-height: 1.0;
+  border-radius:0;
+  font-family: 'Yu Gothic', 'YuGothic', 'Meiryo', sans-serif;
+  font-size:62px;  /* 元の48pxの1.3倍相当 */
+  z-index:10000;
+  text-align:center;
+  white-space:nowrap;
+  font-weight:bold; 
+  -webkit-text-stroke:2px black; /* アウトライン */
+  text-stroke:2px black;         /* Firefox 等用 */
+">
+  --
+</div>
+<!-- 自由入力用テキストエリア -->
+<textarea id="freeText" style="
+  position:absolute;
+  top:85px;       /* 最高警報ボックスの下に少し余裕を持たせる */
+  left:10px;
+  width:440px;     /* 初期幅 */
+  height:590px;    /* 初期高さ */
+  resize:both;     /* 自由にリサイズ可能 */
+  overflow:auto;   /* 中身が多くてもスクロール */
+  font-family:'Yu Gothic','YuGothic','Meiryo',sans-serif;
+  line-height:1.4;
+  font-size:16px;
+  padding:4px;
+  z-index:9999;
+">補足情報を入力</textarea>
+<textarea id="eqInfo" style="
+  position:absolute;
+  bottom:300px;
+  right:30px;
+  width:193px;
+  height:100px;
+  resize:both;
+  overflow:auto;
+  font-family:'Yu Gothic','YuGothic','Meiryo',sans-serif;
+  font-size:16px;
+  padding:4px;
+  z-index:10000;
+  border: 2px solid black; /* ← 黒でやや太め */
+  line-height: 1.4;
+">震源情報がここに表示されます</textarea>
+<div id="mapCredit">
+  NAFY 津波マップ v1.1.1<br>
+  --日--:--　気象庁発表
+</div>
+
+<script>
+const textarea = document.getElementById('eqInfo');
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
+
+textarea.addEventListener('mousedown', (e) => {
+  if(e.target === textarea){ // textarea 本体をドラッグ対象
+    isDragging = true;
+    offsetX = e.clientX - textarea.offsetLeft;
+    offsetY = e.clientY - textarea.offsetTop;
+    textarea.style.cursor = 'move';
+  }
+});
+
+document.addEventListener('mousemove', (e) => {
+  if(isDragging){
+    textarea.style.left = (e.clientX - offsetX) + 'px';
+    textarea.style.top = (e.clientY - offsetY) + 'px';
+    textarea.style.bottom = 'auto';  // bottom が邪魔になるので解除
+    textarea.style.right = 'auto';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if(isDragging){
+    isDragging = false;
+    textarea.style.cursor = 'text';
+  }
+});
+</script>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+const statusBox = document.getElementById('status-box');
+const maxAlertBox = document.getElementById('maxAlertBox');
+// 最大警報計算用
+let maxLevel = 0;
+let maxKindCode = null;
+const levelMap = {
+  '53': 5, // 大津波警報（最高）
+  '52': 4, // 大津波警報
+  '51': 3, // 津波警報
+  '62': 2, // 津波注意報
+  '71': 1,
+  '72': 1,
+  '73': 1
+};
+const codeMap = { 
+  '51': '津波警報 ⚠️すぐ避難',
+  '52': '大津波警報 ⚠️すぐ避難',
+  '53': '大津波警報 ⚠️すぐ避難',  
+  '62': '津波注意報', 
+  '71': '津波予報(若干の海面変動)',
+  '72': '津波予報(若干の海面変動)',
+  '73': '津波予報(若干の海面変動)'
+};
+// 津波警報コードとカラー
+const tsunamiColors = {
+  '51': 'rgb(255,40,0)',
+  '52': 'rgb(200,0,255)',
+  '53': 'rgb(200,0,255)',
+  '62': 'rgb(250,245,0)',
+  '71': 'rgb(60,255,255)',
+  '72': 'rgb(60,255,255)',
+  '73': 'rgb(60,255,255)'
+};
+const alertTextMap = {
+  '53': '大きな津波が襲い甚大な被害が発生します。沿岸部や川沿いにいる人はただちに高台や避難ビルなど安全な場所へ避難してください。津波は繰り返し襲ってきます。警報が解除されるまで安全な場所から離れないでください。「ここなら大丈夫」と油断せず、まわりに避難を呼びかけながら逃げてください。',
+  '52': '大きな津波が襲い甚大な被害が発生します。沿岸部や川沿いにいる人はただちに高台や避難ビルなど安全な場所へ避難してください。津波は繰り返し襲ってきます。警報が解除されるまで安全な場所から離れないでください。「ここなら大丈夫」と油断せず、まわりに避難を呼びかけながら逃げてください。',
+  '51': '津波による被害が発生します。沿岸部や川沿いにいる人はただちに高台や避難ビルなど安全な場所へ避難してください。津波は繰り返し襲ってきます。警報が解除されるまで安全な場所から離れないでください。',
+  '62': '海の中や海岸付近は危険です。海の中にいる人はただちに海から上がって、海岸から離れてください。潮の流れが速い状態が続きますので、注意報が解除されるまで海に入ったり海岸に近づいたりしないようにしてください。',
+  '71': '若干の海面変動が予想されます。特別な行動は必要ありませんが、海や川には近づかないでください。',
+  '72': '若干の海面変動が予想されます。特別な行動は必要ありませんが、海や川には近づかないでください。',
+  '73': '若干の海面変動が予想されます。特別な行動は必要ありませんが、海や川には近づかないでください。'
+};
+// メインマップ
+const map = L.map('map').setView([35.75, 138], 5);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  //attribution: '&copy; CARTO, &copy; OpenStreetMap contributors',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(map);
+
+// ===== 津波レイヤー用 pane（重なり順制御） =====
+map.createPane('tsunami-purple'); // 紫（最前面）
+map.getPane('tsunami-purple').style.zIndex = 450;
+
+map.createPane('tsunami-red');    // 赤
+map.getPane('tsunami-red').style.zIndex = 440;
+
+map.createPane('tsunami-yellow'); // 黄
+map.getPane('tsunami-yellow').style.zIndex = 430;
+
+map.createPane('tsunami-blue');   // 水色（背面）
+map.getPane('tsunami-blue').style.zIndex = 420;
+
+// ミニマップ（位置・ズーム調整）
+const miniMapOkinawa = L.map('okinawaMap', {
+  attributionControl:false,
+  zoomControl:false
+}).setView([27.5, 126.5], 5);
+const miniMapOgasawara = L.map('ogasawaraMap', {
+  attributionControl:false,
+  zoomControl:false
+}).setView([27.05, 142.2], 7);
+[L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd', maxZoom:19}).addTo(miniMapOkinawa),
+ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd', maxZoom:19}).addTo(miniMapOgasawara)];
+
+setTimeout(() => {
+  miniMapOkinawa.invalidateSize();
+  miniMapOgasawara.invalidateSize();
+}, 0);
+
+// ステータス更新
+async function updateStatus(msg){
+  statusBox.textContent = msg;
+  await new Promise(r=>setTimeout(r,0));
+}
+
+let hdc = "";
+
+// メイン処理
+async function loadXML() {
+  try {
+    // 潮位観測点マスタ（1回だけ取得）
+    const stationRes = await fetch('https://script.google.com/macros/s/AKfycbyv1i5Mt9hty7LONdWpN-St-kfMmse_MPI4VtxIuvBeVBXEAc9n6rBTOx0C31PSkfqBJw/exec');
+    const stationList = await stationRes.json();
+
+    await updateStatus('XML取得中…');
+    //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ここを変更して情報元のURLを設定！！！！！！！！↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+    const res = await fetch('https://script.google.com/macros/s/AKfycbw1VUTUfHSuSI0lAzuZbU22_jIBYDGBTWoIcgAXPejlAJKYqJQhIWfBzaLDmkCecxtc/exec');
+    if(!res.ok) throw new Error('XML取得失敗: ' + res.status);
+    await updateStatus('XML取得完了');
+
+    const text = await res.text();
+    await updateStatus('XML文字列読み込み完了');
+
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, 'text/xml');
+    await updateStatus('XMLパース完了');
+
+    // ===== 津波観測点（最大波）描画 =====
+    const OBS_NS = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
+    const EB_NS  = 'http://xml.kishou.go.jp/jmaxml1/elementBasis1/';
+
+    const observation = xml.getElementsByTagNameNS(OBS_NS, 'Observation')[0];
+    if (observation) {
+      const itemsObs = observation.getElementsByTagNameNS(OBS_NS, 'Item');
+
+      for (const item of itemsObs) {
+        const stations = item.getElementsByTagNameNS(OBS_NS, 'Station');
+
+        for (const st of stations) {
+          const code = st.getElementsByTagNameNS(OBS_NS, 'Code')[0]?.textContent;
+          if (!code) continue;
+          const areaCode3 = code.slice(0, 3);
+
+          const heightNode = st.getElementsByTagNameNS(EB_NS, 'TsunamiHeight')[0];
+          if (!heightNode) continue;
+
+          const h = Number(heightNode.textContent);
+          if (isNaN(h)) continue;
+          // h を元に前後関係を決める（基準値 1000）
+          const zIndex = 1000 + Math.round(h * 100);
+
+          // 観測点マスタから座標取得
+          const master = stationList.find(s => s.code === code);
+          if (!master) continue;
+
+          // 色判定
+          let fillColor;
+          let textColor = 'black';
+
+          if (h < 0.2) {
+            fillColor = 'rgb(60,255,255)';
+          } else if (h < 1) {
+            fillColor = 'rgb(250,245,0)';
+          } else if (h < 3) {
+            fillColor = 'rgb(255,40,0)';
+            textColor = 'white';
+          } else {
+            fillColor = 'rgb(200,0,255)';
+            textColor = 'white';
+          }
+
+          // 表示文字
+          let label = h.toString();
+          const desc = heightNode.getAttribute('description') || '';
+          if (desc.includes('以上')) label += '+';
+
+          // 四角形サイズ（大きめ）
+          const d = 0.08;
+          const bounds = [
+            [master.latitude - d, master.longitude - d],
+            [master.latitude + d, master.longitude + d]
+          ];
+
+          // 四角形
+          L.marker([master.latitude, master.longitude], {
+            zIndexOffset: zIndex,
+            icon: L.divIcon({
+              className: '',
+              html: `
+                <div style="
+                  display:inline-block;
+                  transform: translate(-50%, -50%);
+                  padding:4px 6px;
+                  font-size:18px;
+                  font-weight:bold;
+                  background:${fillColor};
+                  color:${textColor};
+                  border:2px solid black;
+                  white-space:nowrap;
+                  line-height:1.1;
+                ">
+                  ${label}
+                </div>
+              `
+            })
+          }).addTo(map);
+          if (['772','800','802'].includes(areaCode3)){
+            L.marker([master.latitude, master.longitude], {
+            zIndexOffset: zIndex,
+            icon: L.divIcon({
+              className: '',
+              html: `
+                <div style="
+                  display:inline-block;
+                  padding:4px 6px;
+                  font-size:18px;
+                  font-weight:bold;
+                  background:${fillColor};
+                  color:${textColor};
+                  border:2px solid black;
+                  white-space:nowrap;
+                  line-height:1.1;
+                ">
+                  ${label}
+                </div>
+              `
+            })
+          }).addTo(miniMapOkinawa);
+          }
+          if (['321'].includes(areaCode3)){
+            L.marker([master.latitude, master.longitude], {
+            zIndexOffset: zIndex,
+            icon: L.divIcon({
+              className: '',
+              html: `
+                <div style="
+                  display:inline-block;
+                  padding:4px 6px;
+                  font-size:18px;
+                  font-weight:bold;
+                  background:${fillColor};
+                  color:${textColor};
+                  border:2px solid black;
+                  white-space:nowrap;
+                  line-height:1.1;
+                ">
+                  ${label}
+                </div>
+              `
+            })
+          }).addTo(miniMapOgasawara);
+          }
+        }
+      }
+    }
+
+    const items = xml.querySelectorAll('Item');
+    await updateStatus(`XML処理完了: ${items.length}件見つかりました`);
+
+    // ===== Headline（XML全体で1回だけ）=====
+    let headlineText = "";
+
+    const headlineNode = xml.getElementsByTagNameNS(
+      'http://xml.kishou.go.jp/jmaxml1/informationBasis1/',
+      'Text'
+    )[0];
+
+    // informationBasis 名前空間
+    const ns_ib = 'http://xml.kishou.go.jp/jmaxml1/informationBasis1/';
+
+    // head 要素取得
+    const head = xml.getElementsByTagNameNS(ns_ib, 'Head')[0];
+
+    // 発表日時
+    const reportTimeISO = head?.getElementsByTagNameNS(ns_ib, 'ReportDateTime')[0]?.textContent || '';
+    let reportTimeFormatted = '';
+
+    if (reportTimeISO) {
+      const date = new Date(reportTimeISO);
+      const dd = ('0' + date.getDate()).slice(-2);
+      const hh = ('0' + date.getHours()).slice(-2);
+      const min = ('0' + date.getMinutes()).slice(-2);
+      reportTimeFormatted = `${dd}日${hh}:${min}`;
+    }
+
+    // クレジット反映
+    const creditBox = document.getElementById('mapCredit');
+    creditBox.innerHTML =
+      `NAFY 津波マップ v1.1.1<br>${reportTimeFormatted}　気象庁発表`;
+
+    if (headlineNode) {
+      headlineText = headlineNode.textContent;
+      if (headlineText.includes("東日本大震災クラスの津波が来襲します")) {
+        hdc = "◤◢◤◢◤◢🟣⚠️東日本大震災級の津波⚠️🟣◤◢◤◢◤◢\n";
+      }
+    }
+
+// ネームスペース
+const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
+const NS_ELEMENT = 'http://xml.kishou.go.jp/jmaxml1/elementBasis1/';
+
+// 震源要素の処理
+const eq = xml.getElementsByTagNameNS(NS_BODY, 'Earthquake')[0];
+
+if(eq){
+  // 発生日時
+  const eqTimeISO = eq.getElementsByTagNameNS(NS_BODY, 'OriginTime')[0]?.textContent || '';
+  let eqTimeFormatted = '';
+  if(eqTimeISO){
+    const date = new Date(eqTimeISO);
+    eqTimeFormatted = `${('0'+(date.getMonth()+1)).slice(-2)}/${('0'+date.getDate()).slice(-2)} ${('0'+date.getHours()).slice(-2)}:${('0'+date.getMinutes()).slice(-2)}頃`;
+  }
+
+  // 震源地
+  const hypocenter = eq.getElementsByTagNameNS(NS_BODY, 'Hypocenter')[0]
+                     ?.getElementsByTagNameNS(NS_BODY, 'Name')[0]?.textContent || '';
+
+  let magnitude = '不明';
+  const magNode = eq.getElementsByTagNameNS(NS_ELEMENT, 'Magnitude')[0];
+
+  if (magNode) {
+    const magText = magNode.textContent;
+    if (magText && !isNaN(Number(magText))) {
+      magnitude = 'M' + magText;
+    } else {
+      // NaN の場合は description 属性を参照
+      const desc = magNode.getAttribute('description');
+      magnitude = desc ? desc : '不明';
+    }
+  }
+
+  document.getElementById('eqInfo').value = `【震源要素の情報】
+発生時刻: ${eqTimeFormatted}
+震源地: ${hypocenter}
+${magnitude}`;
+} else {
+  document.getElementById('eqInfo').value = "Earthquake要素が取得できませんでした";
+}
+
+    for(let i=0;i<items.length;i++){
+      const item = items[i];
+      const code = item.querySelector('Area > Code')?.textContent || item.querySelector('Code')?.textContent;
+      const areaName = item.querySelector('Area > Name')?.textContent || '不明';
+      const kindCode = item.querySelector('Category > Kind > Code')?.textContent || '00';
+
+      const level = levelMap[kindCode] || 0;
+      if(level > maxLevel){
+        maxLevel = level;
+        maxKindCode = kindCode;
+      }
+
+      await updateStatus(`(${i+1}/${items.length}) ${areaName}(${code}) GeoJSON取得中…`);
+
+      try {
+        const geoRes = await fetch(`https://geoshape.ex.nii.ac.jp/jma/resource/AreaTsunami/20240520/${code}.geojson`);
+        if(!geoRes.ok) throw new Error('GeoJSON取得失敗: ' + geoRes.status);
+        const geoJson = await geoRes.json();
+
+        geoJson.features.forEach(f => f.properties.kindCode = kindCode);
+
+        L.geoJSON(geoJson, {
+          pane: getTsunamiPane(kindCode), // ← ここ
+          style: function(feature){
+            const kc = feature.properties.kindCode;
+            let weight = 2;
+            if(kc==='52'||kc==='53') weight = 8;
+            else if(kc==='51') weight = 5;
+            else if(kc==='62') weight = 4;
+            else if(['71','72','73'].includes(kc)) weight = 3;
+
+            return {
+              color: tsunamiColors[kc] || 'gray',
+              weight: weight,
+              fillOpacity: 1
+            };
+          }
+        }).addTo(map);
+
+        // ミニマップ描画（該当コードのみ）
+        if(['772','800','802'].includes(code)){
+          L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: 2, fillOpacity:1})}).addTo(miniMapOkinawa);
+        }
+        if(['321'].includes(code)){
+          L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: 2, fillOpacity:1})}).addTo(miniMapOgasawara);
+        }
+
+        await updateStatus(`(${i+1}/${items.length}) ${areaName}描画完了`);
+      } catch(e){
+        await updateStatus(`(${i+1}/${items.length}) ${areaName}描画エラー: ${e.message}`);
+      }
+    }
+
+    if(maxKindCode){
+      maxAlertBox.textContent = `${codeMap[maxKindCode]}`;
+    }else{
+      maxAlertBox.textContent = '--';
+    }
+
+    if(maxKindCode){
+      const text = codeMap[maxKindCode];
+      maxAlertBox.textContent = `${text}`;
+
+      // 背景色
+      maxAlertBox.style.background = tsunamiColors[maxKindCode] || 'gray';
+
+      // 文字色 + アウトライン
+      if(['51','52','53'].includes(maxKindCode)){
+        maxAlertBox.style.color = 'white';
+        maxAlertBox.style.webkitTextStroke = '2px black';
+      } else {
+        maxAlertBox.style.color = 'black';
+        maxAlertBox.style.webkitTextStroke = '2px white';
+      }
+
+      const freeText = document.getElementById('freeText');
+      if(alertTextMap[maxKindCode]){
+        freeText.value = hdc + alertTextMap[maxKindCode];
+      }
+
+    } else {
+      maxAlertBox.textContent = '沖合の津波観測に関する情報';
+      maxAlertBox.style.background = 'gray';
+      maxAlertBox.style.color = 'white';
+    }
+
+    await updateStatus('すべての津波ポリゴン描画完了');
+    setTimeout(()=>{statusBox.classList.add('hidden');},1000);
+
+  } catch(e){
+    await updateStatus('エラー: '+e.message);
+  }
+}
+
+// 津波コード → pane の対応
+function getTsunamiPane(kindCode){
+  if(kindCode === '52' || kindCode === '53') return 'tsunami-purple'; // 大津波・津波警報
+  if(kindCode === '51') return 'tsunami-red';    // 津波警報
+  if(kindCode === '62') return 'tsunami-yellow'; // 津波注意報
+  if(['71','72','73'].includes(kindCode)) return 'tsunami-blue'; // 予報・解除等
+  return undefined;
+}
+
+loadXML();
+</script>
+</body>
+</html>
