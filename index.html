@@ -165,6 +165,25 @@ document.addEventListener('mouseup', () => {
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
+// ===== 港コード（観測点）マスタ =====
+let PORT_MASTER_MAP = null;
+
+async function loadPortMaster() {
+  if (PORT_MASTER_MAP) return PORT_MASTER_MAP;
+
+  const res = await fetch('./port_master.json');
+  if (!res.ok) throw new Error('port_master.json 読み込み失敗');
+
+  const json = await res.json();
+
+  PORT_MASTER_MAP = new Map();
+  for (const item of json) {
+    PORT_MASTER_MAP.set(item.code, item);
+  }
+
+  return PORT_MASTER_MAP;
+}
+  
 const statusBox = document.getElementById('status-box');
 const maxAlertBox = document.getElementById('maxAlertBox');
 // 最大警報計算用
@@ -257,8 +276,8 @@ let hdc = "";
 async function loadXML() {
   try {
     // 潮位観測点マスタ（1回だけ取得）
-    const stationRes = await fetch('https://script.google.com/macros/s/AKfycbyv1i5Mt9hty7LONdWpN-St-kfMmse_MPI4VtxIuvBeVBXEAc9n6rBTOx0C31PSkfqBJw/exec');
-    const stationList = await stationRes.json();
+// 潮位観測点マスタ（GitHub上のJSON）
+const portMap = await loadPortMaster();
 
     await updateStatus('XML取得中…');
     //↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ここを変更して情報元のURLを設定！！！！！！！！↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
@@ -298,7 +317,7 @@ async function loadXML() {
           const zIndex = 1000 + Math.round(h * 100);
 
           // 観測点マスタから座標取得
-          const master = stationList.find(s => s.code === code);
+          const master = portMap.get(code);
           if (!master) continue;
 
           // 色判定
