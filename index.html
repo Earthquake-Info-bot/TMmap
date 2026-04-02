@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>津波マップv1.1.2</title>
+<title>T津波マップv1.1.3</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -303,6 +303,7 @@ for (let i = 0; i < entries.length; i++) {
     targetLink = href;
     break;
   }
+  targetLink = "https://www.data.jma.go.jp/developer/xml/data/20260401232851_0_VTSE41_010000.xml";
 }
 
 if (!targetLink) {
@@ -548,7 +549,8 @@ ${magnitude}`;
       await updateStatus(`(${i+1}/${items.length}) ${areaName}(${code}) GeoJSON取得中…`);
 
       try {
-        const geoRes = await fetch(`https://geoshape.ex.nii.ac.jp/jma/resource/AreaTsunami/20240520/${code}.geojson`);
+        //const geoRes = await fetch(`https://geoshape.ex.nii.ac.jp/jma/resource/AreaTsunami/20240520/${code}.geojson`);
+        const geoRes = await fetch(`./geojson/${code}.json`);
         if(!geoRes.ok) throw new Error('GeoJSON取得失敗: ' + geoRes.status);
         const geoJson = await geoRes.json();
 
