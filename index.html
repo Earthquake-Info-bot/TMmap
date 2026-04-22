@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.2.1</title>
+<title>T津波マップv1.2.2</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -127,7 +127,7 @@
   line-height: 1.4;
 ">震源情報がここに表示されます</textarea>
 <div id="mapCredit">
-  NAFY 津波マップ v1.1.1<br>
+  NAFY 津波マップ v1.2.2<br>
   --日--:--　気象庁発表
 </div>
 
@@ -164,26 +164,7 @@ document.addEventListener('mouseup', () => {
 </script>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script>
-// ===== 港コード（観測点）マスタ =====
-let PORT_MASTER_MAP = null;
-
-async function loadPortMaster() {
-  if (PORT_MASTER_MAP) return PORT_MASTER_MAP;
-
-  const res = await fetch('./port_master.json');
-  if (!res.ok) throw new Error('port_master.json 読み込み失敗');
-
-  const json = await res.json();
-
-  PORT_MASTER_MAP = new Map();
-  for (const item of json) {
-    PORT_MASTER_MAP.set(item.code, item);
-  }
-
-  return PORT_MASTER_MAP;
-}
-  
+<script>  
 const statusBox = document.getElementById('status-box');
 const maxAlertBox = document.getElementById('maxAlertBox');
 // 最大警報計算用
@@ -275,9 +256,6 @@ let hdc = "";
 // メイン処理
 async function loadXML() {
   try {
-    // 潮位観測点マスタ（1回だけ取得）
-// 潮位観測点マスタ（GitHub上のJSON）
-const portMap = await loadPortMaster();
 
     await updateStatus('XML取得中…');
 // ===== 情報元リンク自動取得 =====
@@ -323,134 +301,7 @@ await updateStatus('XML文字列読み込み完了');
 const parser = new DOMParser();
 const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XMLパース完了');
 
-    // ===== 津波観測点（最大波）描画 =====
-    const OBS_NS = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
-    const EB_NS  = 'http://xml.kishou.go.jp/jmaxml1/elementBasis1/';
 
-    const observation = xml.getElementsByTagNameNS(OBS_NS, 'Observation')[0];
-    if (observation) {
-      const itemsObs = observation.getElementsByTagNameNS(OBS_NS, 'Item');
-
-      for (const item of itemsObs) {
-        const stations = item.getElementsByTagNameNS(OBS_NS, 'Station');
-
-        for (const st of stations) {
-          const code = st.getElementsByTagNameNS(OBS_NS, 'Code')[0]?.textContent;
-          if (!code) continue;
-          const areaCode3 = code.slice(0, 3);
-
-          const heightNode = st.getElementsByTagNameNS(EB_NS, 'TsunamiHeight')[0];
-          if (!heightNode) continue;
-
-          const h = Number(heightNode.textContent);
-          if (isNaN(h)) continue;
-          // h を元に前後関係を決める（基準値 1000）
-          const zIndex = 1000 + Math.round(h * 100);
-
-          // 観測点マスタから座標取得
-          const master = portMap.get(code);
-          if (!master) continue;
-
-          // 色判定
-          let fillColor;
-          let textColor = 'black';
-
-          if (h < 0.2) {
-            fillColor = 'rgb(60,255,255)';
-          } else if (h < 1) {
-            fillColor = 'rgb(250,245,0)';
-          } else if (h < 3) {
-            fillColor = 'rgb(255,40,0)';
-            textColor = 'white';
-          } else {
-            fillColor = 'rgb(200,0,255)';
-            textColor = 'white';
-          }
-
-          // 表示文字
-          let label = h.toString();
-          const desc = heightNode.getAttribute('description') || '';
-          if (desc.includes('以上')) label += '+';
-
-          // 四角形サイズ（大きめ）
-          const d = 0.08;
-          const bounds = [
-            [master.latitude - d, master.longitude - d],
-            [master.latitude + d, master.longitude + d]
-          ];
-
-          // 四角形
-          L.marker([master.latitude, master.longitude], {
-            zIndexOffset: zIndex,
-            icon: L.divIcon({
-              className: '',
-              html: `
-                <div style="
-                  display:inline-block;
-                  transform: translate(-50%, -50%);
-                  padding:4px 6px;
-                  font-size:18px;
-                  font-weight:bold;
-                  background:${fillColor};
-                  color:${textColor};
-                  border:2px solid black;
-                  white-space:nowrap;
-                  line-height:1.1;
-                ">
-                  ${label}
-                </div>
-              `
-            })
-          }).addTo(map);
-          if (['772','800','802'].includes(areaCode3)){
-            L.marker([master.latitude, master.longitude], {
-            zIndexOffset: zIndex,
-            icon: L.divIcon({
-              className: '',
-              html: `
-                <div style="
-                  display:inline-block;
-                  padding:4px 6px;
-                  font-size:18px;
-                  font-weight:bold;
-                  background:${fillColor};
-                  color:${textColor};
-                  border:2px solid black;
-                  white-space:nowrap;
-                  line-height:1.1;
-                ">
-                  ${label}
-                </div>
-              `
-            })
-          }).addTo(miniMapOkinawa);
-          }
-          if (['321'].includes(areaCode3)){
-            L.marker([master.latitude, master.longitude], {
-            zIndexOffset: zIndex,
-            icon: L.divIcon({
-              className: '',
-              html: `
-                <div style="
-                  display:inline-block;
-                  padding:4px 6px;
-                  font-size:18px;
-                  font-weight:bold;
-                  background:${fillColor};
-                  color:${textColor};
-                  border:2px solid black;
-                  white-space:nowrap;
-                  line-height:1.1;
-                ">
-                  ${label}
-                </div>
-              `
-            })
-          }).addTo(miniMapOgasawara);
-          }
-        }
-      }
-    }
 
     const items = xml.querySelectorAll('Item');
     await updateStatus(`XML処理完了: ${items.length}件見つかりました`);
@@ -484,7 +335,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
     creditBox.innerHTML =
-      `NAFY 津波マップ v1.1.1<br>${reportTimeFormatted}　気象庁発表`;
+      `NAFY 津波マップ v1.2.2<br>${reportTimeFormatted}　気象庁発表`;
 
     if (headlineNode) {
       headlineText = headlineNode.textContent;
