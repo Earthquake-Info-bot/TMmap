@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.3.3</title>
+<title>T津波マップv1.4.1</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
   body { margin:0; padding:0; }
-  #map { width: 100%; height: 100vh; z-index: 100; opacity: 1; background: transparent;}
+  #map { width: 100%; height: 100vh; z-index: 100; opacity: 1; background: #193892;}
 
   /* ステータスボックス */
   #status-box {
@@ -97,20 +97,6 @@
   --
 </div>
 <!-- 自由入力用テキストエリア -->
-<textarea id="freeText" style="
-  position:absolute;
-  top:85px;       /* 最高警報ボックスの下に少し余裕を持たせる */
-  left:10px;
-  width:440px;     /* 初期幅 */
-  height:590px;    /* 初期高さ */
-  resize:both;     /* 自由にリサイズ可能 */
-  overflow:auto;   /* 中身が多くてもスクロール */
-  font-family:'Yu Gothic','YuGothic','Meiryo',sans-serif;
-  line-height:1.4;
-  font-size:16px;
-  padding:4px;
-  z-index:9999;
-">補足情報を入力</textarea>
 <textarea id="eqInfo" style="
   position:absolute;
   bottom:300px;
@@ -197,15 +183,6 @@ const tsunamiColors = {
   '71': 'rgb(60,255,255)',
   '72': 'rgb(60,255,255)',
   '73': 'rgb(60,255,255)'
-};
-const alertTextMap = {
-  '53': '大きな津波が襲い甚大な被害が発生します。沿岸部や川沿いにいる人はただちに高台や避難ビルなど安全な場所へ避難してください。津波は繰り返し襲ってきます。警報が解除されるまで安全な場所から離れないでください。「ここなら大丈夫」と油断せず、まわりに避難を呼びかけながら逃げてください。',
-  '52': '大きな津波が襲い甚大な被害が発生します。沿岸部や川沿いにいる人はただちに高台や避難ビルなど安全な場所へ避難してください。津波は繰り返し襲ってきます。警報が解除されるまで安全な場所から離れないでください。「ここなら大丈夫」と油断せず、まわりに避難を呼びかけながら逃げてください。',
-  '51': '津波による被害が発生します。沿岸部や川沿いにいる人はただちに高台や避難ビルなど安全な場所へ避難してください。津波は繰り返し襲ってきます。警報が解除されるまで安全な場所から離れないでください。',
-  '62': '海の中や海岸付近は危険です。海の中にいる人はただちに海から上がって、海岸から離れてください。潮の流れが速い状態が続きますので、注意報が解除されるまで海に入ったり海岸に近づいたりしないようにしてください。',
-  '71': '若干の海面変動が予想されます。特別な行動は必要ありませんが、海や川には近づかないでください。',
-  '72': '若干の海面変動が予想されます。特別な行動は必要ありませんが、海や川には近づかないでください。',
-  '73': '若干の海面変動が予想されます。特別な行動は必要ありませんが、海や川には近づかないでください。'
 };
 // メインマップ
 const map = L.map('map').setView([35.75, 138], 5);
@@ -314,8 +291,6 @@ await updateStatus('XML文字列読み込み完了');
 
 const parser = new DOMParser();
 const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XMLパース完了');
-
-
 
     const items = xml.querySelectorAll('Item');
     await updateStatus(`XML処理完了: ${items.length}件見つかりました`);
@@ -474,11 +449,6 @@ ${magnitude}`;
       } else {
         maxAlertBox.style.color = 'black';
         maxAlertBox.style.webkitTextStroke = '2px white';
-      }
-
-      const freeText = document.getElementById('freeText');
-      if(alertTextMap[maxKindCode]){
-        freeText.value = hdc + alertTextMap[maxKindCode];
       }
 
     } else {
