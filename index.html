@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.2.5</title>
+<title>T津波マップv1.3.1</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
   body { margin:0; padding:0; }
-  #map { width: 100%; height: 100vh; z-index: 100;}
+  #map { width: 100%; height: 100vh; z-index: 100; opacity: 0;}
 
   /* ステータスボックス */
   #status-box {
@@ -134,7 +134,7 @@
   --日--:--　気象庁発表
 </div>
 
-<script>
+<script> 
 const textarea = document.getElementById('eqInfo');
 let isDragging = false;
 let offsetX = 0;
@@ -212,11 +212,26 @@ const alertTextMap = {
 };
 // メインマップ
 const map = L.map('map').setView([35.75, 138], 5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-  subdomains: 'abcd',
-  opacity: 0.6
-}).addTo(map);
 
+async function loadPref() {
+  map.createPane('land');
+  map.getPane('land').style.zIndex = 200;
+  const res = await fetch('./prefectures.geojson');
+  const prefGeoJson = await res.json();
+
+  L.geoJSON(prefGeoJson, {
+    pane: 'land',
+    style: {
+      color: '#999',
+      weight: 1,
+      fillColor: '#eeeeee',
+      fillOpacity: 1
+    }
+  }).addTo(map);
+}
+
+loadPref();
+  
 // ===== 津波レイヤー用 pane（重なり順制御） =====
 map.createPane('tsunami-purple'); // 紫（最前面）
 map.getPane('tsunami-purple').style.zIndex = 450;
