@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>津波マップv1.2.1</title>
+<title>T津波マップv1.2.1</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -304,6 +304,8 @@ for (let i = 0; i < entries.length; i++) {
     break;
   }
 }
+//テストするために一時的にサンプルデータ
+targetLink = "https://script.google.com/macros/s/AKfycbzssNxsa8sZHszzC1vGia92tAIGwcQGUJ1nIcafY7Ov7_OXBPjgOOom7cy-vx2pOmg_/exec";
 
 if (!targetLink) {
   throw new Error('VTSE41 / VTSE51 のリンクが見つかりません');
