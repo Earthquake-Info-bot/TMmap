@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.2.2</title>
+<title>T津波マップv1.2.3</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -209,10 +209,9 @@ const alertTextMap = {
 };
 // メインマップ
 const map = L.map('map').setView([35.75, 138], 5);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  //attribution: '&copy; CARTO, &copy; OpenStreetMap contributors',
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
   subdomains: 'abcd',
-  maxZoom: 19
+  opacity: 0.3
 }).addTo(map);
 
 // ===== 津波レイヤー用 pane（重なり順制御） =====
