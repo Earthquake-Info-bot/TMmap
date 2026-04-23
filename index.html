@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.7.1</title>
+<title>T津波マップv1.7.2</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -159,11 +159,9 @@ document.addEventListener('mouseup', () => {
   }
 });
 
-const maxAlertBox = document.getElementById('maxAlertBox');
 let miniVisible = true;
-maxAlertBox.addEventListener('click', () => {
 
-maxAlertBox.addEventListener('click', () => {
+document.getElementById('maxAlertBox').addEventListener('click', () => {
   miniVisible = !miniVisible;
 
   const display = miniVisible ? 'block' : 'none';
