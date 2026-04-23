@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.8.8</title>
+<title>T津波マップv1.8.9</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -111,14 +111,14 @@
   text-align:center;
   white-space:nowrap;
   font-weight:bold; 
-  -webkit-text-stroke:2px black; /* アウトライン */
-  text-stroke:2px black;         /* Firefox 等用 */
+  /*webkit-text-stroke:2px black;*/ /* アウトライン */
+  /*text-stroke:2px black;*/         /* Firefox 等用 */
 ">
   --
 </div>
 <!-- 自由入力用テキストエリア -->
 <div id="mapCredit">
-  NAFY 津波マップ v1.8.8<br>
+  NAFY 津波マップ v1.8.9<br>
   --日--:--　気象庁発表
 </div>
 
@@ -333,7 +333,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
 
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
-    creditBox.innerHTML =`NAFY 津波マップ v1.8.8<br>${reportTimeFormatted}　気象庁発表`;
+    creditBox.innerHTML =`NAFY 津波マップ v1.8.9<br>${reportTimeFormatted}　気象庁発表`;
 
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
@@ -369,7 +369,7 @@ if(eq){
     }
   }
 
-  creditBox.innerHTML =`NAFY 津波マップ v1.8.8<br>
+  creditBox.innerHTML =`NAFY 津波マップ v1.8.9<br>
 ${reportTimeFormatted}　気象庁発表
 <span style="display:block; margin-top:4px;">
 ${eqTimeFormatted}発生<br>
