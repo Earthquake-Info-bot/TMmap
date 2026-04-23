@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.9.4</title>
+<title>T津波マップv1.9.5</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -118,7 +118,7 @@
 </div>
 <!-- 自由入力用テキストエリア -->
 <div id="mapCredit">
-  NAFY 津波マップ v1.9.4<br>
+  NAFY 津波マップ v1.9.5<br>
   --日--:--　気象庁発表
 </div>
 
@@ -333,7 +333,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
 
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
-    creditBox.innerHTML =`NAFY 津波マップ v1.9.4<br>${reportTimeFormatted}　気象庁発表`;
+    creditBox.innerHTML =`NAFY 津波マップ v1.9.5<br>${reportTimeFormatted}　気象庁発表`;
 
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
@@ -369,7 +369,7 @@ if(eq){
     }
   }
 
-  creditBox.innerHTML =`NAFY 津波マップ v1.9.4<br>
+  creditBox.innerHTML =`NAFY 津波マップ v1.9.5<br>
 ${reportTimeFormatted}　気象庁発表
 <span style="display:block; margin-top:4px;">
 ${eqTimeFormatted}発生<br>
@@ -390,43 +390,60 @@ if(match){
 }
 
 if(lat && lon){
-  const size = 36;        // ← 少し大きく（30→36）
-  const thickness = 6;    // ← 少し太く
-  
-  const crossIcon = L.divIcon({
-    className: '',
-    html: `
+const size = 28;      // 27だと微妙だからキリよく28
+const thickness = 6;  // 赤線
+const outline = 10;   // 白の太さ（外側）
+
+const crossIcon = L.divIcon({
+  className: '',
+  html: `
+    <div style="width:${size}px;height:${size}px;position:relative;">
+      
+      <!-- 白（下） -->
       <div style="
-        width:${size}px;
-        height:${size}px;
-        position:relative;
-      ">
-        <div style="
-          position:absolute;
-          width:${size * 1.4}px;
-          height:${thickness}px;
-          background:red;
-          top:50%;
-          left:50%;
-          transform:translate(-50%, -50%) rotate(45deg);
-          box-shadow: 0 0 0 2px white;
-        "></div>
-        <div style="
-          position:absolute;
-          width:${size * 1.4}px;
-          height:${thickness}px;
-          background:red;
-          top:50%;
-          left:50%;
-          transform:translate(-50%, -50%) rotate(-45deg);
-          box-shadow: 0 0 0 2px white;
-        "></div>
-      </div>
-      `,
-    iconSize: [size, size],
-    iconAnchor: [size/2, size/2]
-  });
-  
+        position:absolute;
+        width:${size * 1.4}px;
+        height:${outline}px;
+        background:white;
+        top:50%;
+        left:50%;
+        transform:translate(-50%, -50%) rotate(45deg);
+      "></div>
+      <div style="
+        position:absolute;
+        width:${size * 1.4}px;
+        height:${outline}px;
+        background:white;
+        top:50%;
+        left:50%;
+        transform:translate(-50%, -50%) rotate(-45deg);
+      "></div>
+
+      <!-- 赤（上） -->
+      <div style="
+        position:absolute;
+        width:${size * 1.4}px;
+        height:${thickness}px;
+        background:red;
+        top:50%;
+        left:50%;
+        transform:translate(-50%, -50%) rotate(45deg);
+      "></div>
+      <div style="
+        position:absolute;
+        width:${size * 1.4}px;
+        height:${thickness}px;
+        background:red;
+        top:50%;
+        left:50%;
+        transform:translate(-50%, -50%) rotate(-45deg);
+      "></div>
+
+    </div>
+  `,
+  iconSize: [size, size],
+  iconAnchor: [size/2, size/2]
+});  
   L.marker([lat, lon], {
     icon: crossIcon,
     interactive: false,
