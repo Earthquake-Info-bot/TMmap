@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.6.1</title>
+<title>T津波マップv1.6.3</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -361,13 +361,6 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
     creditBox.innerHTML =
       `NAFY 津波マップ v1.2.2<br>${reportTimeFormatted}　気象庁発表`;
 
-    if (headlineNode) {
-      headlineText = headlineNode.textContent;
-      if (headlineText.includes("東日本大震災クラスの津波が来襲します")) {
-        hdc = "◤◢◤◢◤◢🟣⚠️東日本大震災級の津波⚠️🟣◤◢◤◢◤◢\n";
-      }
-    }
-
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
 const NS_ELEMENT = 'http://xml.kishou.go.jp/jmaxml1/elementBasis1/';
@@ -432,19 +425,22 @@ ${magnitude}`;
 
         geoJson.features.forEach(f => f.properties.kindCode = kindCode);
 
+        function getWeight(kc){
+          if(kc==='52'||kc==='53') return 10;
+          if(kc==='51') return 8;
+          if(kc==='62') return 6;
+          if(['71','72','73'].includes(kc)) return 5;
+          return 2;
+        }
+        
         L.geoJSON(geoJson, {
           pane: getTsunamiPane(kindCode), // ← ここ
           style: function(feature){
             const kc = feature.properties.kindCode;
-            let weight = 2;
-            if(kc==='52'||kc==='53') weight = 8;
-            else if(kc==='51') weight = 5;
-            else if(kc==='62') weight = 4;
-            else if(['71','72','73'].includes(kc)) weight = 3;
 
             return {
               color: tsunamiColors[kc] || 'gray',
-              weight: weight,
+              weight: getWeight(kc),
               fillOpacity: 1
             };
           }
@@ -452,10 +448,10 @@ ${magnitude}`;
 
         // ミニマップ描画（該当コードのみ）
         if(['772','800','802'].includes(code)){
-          L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: 2, fillOpacity:1})}).addTo(miniMapOkinawa);
+          L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: getWeight(kc), fillOpacity:1})}).addTo(miniMapOkinawa);
         }
         if(['321'].includes(code)){
-          L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: 2, fillOpacity:1})}).addTo(miniMapOgasawara);
+          L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: getWeight(kc), fillOpacity:1})}).addTo(miniMapOgasawara);
         }
 
         await updateStatus(`(${i+1}/${items.length}) ${areaName}描画完了`);
