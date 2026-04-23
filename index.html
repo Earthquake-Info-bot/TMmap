@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.8.3</title>
+<title>T津波マップv1.8.4</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -120,7 +120,7 @@
   position:absolute;
   bottom:300px;
   right:30px;
-  width:20px;
+  width:206px;
   height:100px;
   overflow:auto;
   font-family:'Yu Gothic','YuGothic','Meiryo',sans-serif;
@@ -131,10 +131,11 @@
   background: rgba(255,255,255,0.8);
   color: #000;
   border: none;
+  white-space: pre-line;
 ">震源情報がここに表示されます</div>
 <!-- 自由入力用テキストエリア -->
 <div id="mapCredit">
-  NAFY 津波マップ v1.2.2<br>
+  NAFY 津波マップ v1.8.4<br>
   --日--:--　気象庁発表
 </div>
 
@@ -381,7 +382,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
     creditBox.innerHTML =
-      `NAFY 津波マップ v1.2.2<br>${reportTimeFormatted}　気象庁発表`;
+      `NAFY 津波マップ v1.8.4<br>${reportTimeFormatted}　気象庁発表`;
 
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
@@ -417,7 +418,7 @@ if(eq){
     }
   }
 
-  document.getElementById('eqInfo').textContent = `【震源要素の情報】
+  document.getElementById('eqInfo').textContent = `【震源情報】
 発生時刻: ${eqTimeFormatted}
 震源地: ${hypocenter}
 ${magnitude}`;
