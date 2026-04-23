@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.8.9</title>
+<title>T津波マップv1.8.10</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -118,7 +118,7 @@
 </div>
 <!-- 自由入力用テキストエリア -->
 <div id="mapCredit">
-  NAFY 津波マップ v1.8.9<br>
+  NAFY 津波マップ v1.8.10<br>
   --日--:--　気象庁発表
 </div>
 
@@ -333,7 +333,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
 
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
-    creditBox.innerHTML =`NAFY 津波マップ v1.8.9<br>${reportTimeFormatted}　気象庁発表`;
+    creditBox.innerHTML =`NAFY 津波マップ v1.8.10<br>${reportTimeFormatted}　気象庁発表`;
 
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
@@ -369,7 +369,7 @@ if(eq){
     }
   }
 
-  creditBox.innerHTML =`NAFY 津波マップ v1.8.9<br>
+  creditBox.innerHTML =`NAFY 津波マップ v1.8.10<br>
 ${reportTimeFormatted}　気象庁発表
 <span style="display:block; margin-top:4px;">
 ${eqTimeFormatted}発生<br>
@@ -451,10 +451,10 @@ ${magnitude}
       // 文字色 + アウトライン
       if(['51','52','53'].includes(maxKindCode)){
         maxAlertBox.style.color = 'white';
-        maxAlertBox.style.webkitTextStroke = '2px black';
+        //maxAlertBox.style.webkitTextStroke = '2px black';
       } else {
         maxAlertBox.style.color = 'black';
-        maxAlertBox.style.webkitTextStroke = '2px white';
+        //maxAlertBox.style.webkitTextStroke = '2px white';
       }
 
     } else {
