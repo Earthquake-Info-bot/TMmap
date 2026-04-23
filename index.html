@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.8.10</title>
+<title>T津波マップv1.9.1</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -118,7 +118,7 @@
 </div>
 <!-- 自由入力用テキストエリア -->
 <div id="mapCredit">
-  NAFY 津波マップ v1.8.10<br>
+  NAFY 津波マップ v1.9.1<br>
   --日--:--　気象庁発表
 </div>
 
@@ -333,7 +333,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
 
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
-    creditBox.innerHTML =`NAFY 津波マップ v1.8.10<br>${reportTimeFormatted}　気象庁発表`;
+    creditBox.innerHTML =`NAFY 津波マップ v1.9.1<br>${reportTimeFormatted}　気象庁発表`;
 
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
@@ -369,13 +369,56 @@ if(eq){
     }
   }
 
-  creditBox.innerHTML =`NAFY 津波マップ v1.8.10<br>
+  creditBox.innerHTML =`NAFY 津波マップ v1.9.1<br>
 ${reportTimeFormatted}　気象庁発表
 <span style="display:block; margin-top:4px;">
 ${eqTimeFormatted}発生<br>
 震源地:${hypocenter}<br>
 ${magnitude}
 </span>`;
+
+// 座標（緯度経度）
+const coordText = eq.getElementsByTagName('jmx_eb:Coordinate')[0]?.textContent || '';
+
+let lat = null;
+let lon = null;
+
+const match = coordText.match(/([+-]\d+\.?\d*)([+-]\d+\.?\d*)/);
+if(match){
+  lat = parseFloat(match[1]);
+  lon = parseFloat(match[2]);
+}
+
+if(lat && lon){
+  const icon = L.divIcon({
+    html: `
+      <div style="position:relative; width:20px; height:20px;">
+        <div style="
+          position:absolute;
+          top:0;
+          left:9px;
+          width:2px;
+          height:20px;
+          background:red;
+          border:1px solid white;
+        "></div>
+        <div style="
+          position:absolute;
+          top:9px;
+          left:0;
+          width:20px;
+          height:2px;
+          background:red;
+          border:1px solid white;
+        "></div>
+      </div>
+    `,
+    className: ''
+  });
+
+  L.marker([lat, lon], { icon }).addTo(map);
+}
+
 }
 
     for(let i=0;i<items.length;i++){
