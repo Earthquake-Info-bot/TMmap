@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.8.6</title>
+<title>T津波マップv1.8.7</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -118,40 +118,11 @@
 </div>
 <!-- 自由入力用テキストエリア -->
 <div id="mapCredit">
-  NAFY 津波マップ v1.8.6<br>
+  NAFY 津波マップ v1.8.7<br>
   --日--:--　気象庁発表
 </div>
 
 <script> 
-let isDragging = false;
-let offsetX = 0;
-let offsetY = 0;
-
-textarea.addEventListener('mousedown', (e) => {
-  if(e.target === textarea){ // textarea 本体をドラッグ対象
-    isDragging = true;
-    offsetX = e.clientX - textarea.offsetLeft;
-    offsetY = e.clientY - textarea.offsetTop;
-    textarea.style.cursor = 'move';
-  }
-});
-
-document.addEventListener('mousemove', (e) => {
-  if(isDragging){
-    textarea.style.left = (e.clientX - offsetX) + 'px';
-    textarea.style.top = (e.clientY - offsetY) + 'px';
-    textarea.style.bottom = 'auto';  // bottom が邪魔になるので解除
-    textarea.style.right = 'auto';
-  }
-});
-
-document.addEventListener('mouseup', () => {
-  if(isDragging){
-    isDragging = false;
-    textarea.style.cursor = 'text';
-  }
-});
-
 let miniVisible = true;
 
 document.getElementById('maxAlertBox').addEventListener('click', () => {
@@ -362,7 +333,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
 
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
-    creditBox.innerHTML =`NAFY 津波マップ v1.8.6<br>${reportTimeFormatted}　気象庁発表`;
+    creditBox.innerHTML =`NAFY 津波マップ v1.8.7<br>${reportTimeFormatted}　気象庁発表`;
 
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
@@ -398,13 +369,14 @@ if(eq){
     }
   }
 
-  creditBox.innerHTML =`NAFY 津波マップ v1.8.4<br>
+  creditBox.innerHTML =`NAFY 津波マップ v1.8.7<br>
 ${reportTimeFormatted}　気象庁発表
 <span style="display:block; margin-top:4px;">
 ${eqTimeFormatted}発生<br>
 震源地:${hypocenter}<br>
 ${magnitude}
 </span>`;
+}
 
     for(let i=0;i<items.length;i++){
       const item = items[i];
