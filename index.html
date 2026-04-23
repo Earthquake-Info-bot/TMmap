@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.4.7</title>
+<title>T津波マップv1.5.1</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -35,19 +35,28 @@
     font-family: "Zen Maru Gothic", sans-serif;
   }
   #okinawaWrapper{
-    left: 30px;
-    top: 80px;
+    left: 40px;
+    top: 1100px;
+    width: 300px;
   }
+  
   #ogasawaraWrapper{
     right: 30px;
     bottom: 40px;
+    width: 200px;
   }
-
-  .miniMap{
+  
+  /* 地図本体 */
+  #okinawaMap{
+    width: 300px; /* ← 1.5倍 */
+    height: 225px;
+    border: 2px solid #fff;
+  }
+  #ogasawaraMap{
     width: 200px;
     height: 225px;
-    border: 2px solid #000;
-  }
+    border: 2px solid #fff;
+  }  
   #mapCredit {
     position: absolute;
     top: 5px;          /* 上1px */
@@ -166,9 +175,9 @@ const levelMap = {
   '73': 1
 };
 const codeMap = { 
-  '51': '津波警報 ⚠️すぐ避難',
-  '52': '大津波警報 ⚠️すぐ避難',
-  '53': '大津波警報 ⚠️すぐ避難',  
+  '51': '津波警報',
+  '52': '大津波警報',
+  '53': '大津波警報',  
   '62': '津波注意報', 
   '71': '津波予報(若干の海面変動)',
   '72': '津波予報(若干の海面変動)',
@@ -206,7 +215,25 @@ async function loadPref() {
     }
   }).addTo(map);
 }
+function addBaseMap(mapInstance){
+  mapInstance.createPane('land');
+  mapInstance.getPane('land').style.zIndex = 200;
 
+  fetch('./prefectures.geojson')
+    .then(r => r.json())
+    .then(prefGeoJson => {
+      L.geoJSON(prefGeoJson, {
+        pane: 'land',
+        style: {
+          color: '#999',
+          weight: 1,
+          fillColor: '#eeeeee',
+          fillOpacity: 1
+        }
+      }).addTo(mapInstance);
+    });
+}
+  
 loadPref();
   
 // ===== 津波レイヤー用 pane（重なり順制御） =====
@@ -227,12 +254,15 @@ const miniMapOkinawa = L.map('okinawaMap', {
   attributionControl:false,
   zoomControl:false
 }).setView([27.5, 126.5], 5);
+
 const miniMapOgasawara = L.map('ogasawaraMap', {
   attributionControl:false,
   zoomControl:false
 }).setView([27.05, 142.2], 7);
-[L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd', maxZoom:19}).addTo(miniMapOkinawa),
- L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd', maxZoom:19}).addTo(miniMapOgasawara)];
+
+// ★これ追加
+addBaseMap(miniMapOkinawa);
+addBaseMap(miniMapOgasawara);
 
 setTimeout(() => {
   miniMapOkinawa.invalidateSize();
