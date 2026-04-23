@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.9.1</title>
+<title>T津波マップv1.9.2</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -118,7 +118,7 @@
 </div>
 <!-- 自由入力用テキストエリア -->
 <div id="mapCredit">
-  NAFY 津波マップ v1.9.1<br>
+  NAFY 津波マップ v1.9.2<br>
   --日--:--　気象庁発表
 </div>
 
@@ -333,7 +333,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
 
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
-    creditBox.innerHTML =`NAFY 津波マップ v1.9.1<br>${reportTimeFormatted}　気象庁発表`;
+    creditBox.innerHTML =`NAFY 津波マップ v1.9.2<br>${reportTimeFormatted}　気象庁発表`;
 
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
@@ -369,7 +369,7 @@ if(eq){
     }
   }
 
-  creditBox.innerHTML =`NAFY 津波マップ v1.9.1<br>
+  creditBox.innerHTML =`NAFY 津波マップ v1.9.2<br>
 ${reportTimeFormatted}　気象庁発表
 <span style="display:block; margin-top:4px;">
 ${eqTimeFormatted}発生<br>
@@ -390,33 +390,51 @@ if(match){
 }
 
 if(lat && lon){
-  const icon = L.divIcon({
+  const size = 36;        // ← 少し大きく（30→36）
+  const thickness = 6;    // ← 少し太く
+  const lat = hypo.latitude;
+  const lon = hypo.longitude;
+  
+  const crossIcon = L.divIcon({
+    className: '',
     html: `
-      <div style="position:relative; width:20px; height:20px;">
+      <div style="
+        width:${size}px;
+        height:${size}px;
+        position:relative;
+        transform: rotate(45deg);
+      ">
         <div style="
           position:absolute;
           top:0;
-          left:9px;
-          width:2px;
-          height:20px;
+          left:${size/2-thickness/2}px;
+          width:${thickness}px;
+          height:${size}px;
           background:red;
-          border:1px solid white;
+          border:2px solid white; /* ← 白枠 */
+          box-sizing:border-box;
         "></div>
         <div style="
           position:absolute;
-          top:9px;
           left:0;
-          width:20px;
-          height:2px;
+          top:${size/2-thickness/2}px;
+          width:${size}px;
+          height:${thickness}px;
           background:red;
-          border:1px solid white;
+          border:2px solid white; /* ← 白枠 */
+          box-sizing:border-box;
         "></div>
       </div>
     `,
-    className: ''
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2]
   });
-
-  L.marker([lat, lon], { icon }).addTo(map);
+  
+  L.marker([lat, lon], {
+    icon: crossIcon,
+    interactive: false,
+    zIndexOffset: 10000
+  }).addTo(map);
 }
 
 }
