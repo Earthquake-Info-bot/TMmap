@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.6.4</title>
+<title>T津波マップv1.7.1</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -37,8 +37,8 @@
     color: #fff;
   }
   #okinawaWrapper{
-    left: 40px;
-    top: 90px;
+    left: 60px;
+    top: 110px;
     width: 300px;
   }
   
@@ -157,6 +157,19 @@ document.addEventListener('mouseup', () => {
     isDragging = false;
     textarea.style.cursor = 'text';
   }
+});
+
+const maxAlertBox = document.getElementById('maxAlertBox');
+let miniVisible = true;
+maxAlertBox.addEventListener('click', () => {
+
+maxAlertBox.addEventListener('click', () => {
+  miniVisible = !miniVisible;
+
+  const display = miniVisible ? 'block' : 'none';
+
+  document.getElementById('okinawaWrapper').style.display = display;
+  document.getElementById('ogasawaraWrapper').style.display = display;
 });
 </script>
 
