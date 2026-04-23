@@ -2,12 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.5.2</title>
+<title>T津波マップv1.6.1</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
   body { margin:0; padding:0; }
   #map { width: 100%; height: 100vh; z-index: 100; opacity: 1; background: #2a3345;}
+  #okinawaMap, #ogasawaraMap { background: #2a3345;}
 
   /* ステータスボックス */
   #status-box {
@@ -33,6 +34,7 @@
   .miniMap-title{
     text-align: center;
     font-family: "Zen Maru Gothic", sans-serif;
+    color: #fff;
   }
   #okinawaWrapper{
     left: 40px;
@@ -50,12 +52,12 @@
   #okinawaMap{
     width: 300px; /* ← 1.5倍 */
     height: 225px;
-    border: 2px solid #fff;
+    border: 3px solid #fff;
   }
   #ogasawaraMap{
     width: 200px;
     height: 225px;
-    border: 2px solid #fff;
+    border: 3px solid #fff;
   }  
   #mapCredit {
     position: absolute;
@@ -78,11 +80,11 @@
 <div id="status-box">準備中…</div>
 <div id="map"></div>
 <div id="okinawaWrapper" class="miniMap-wrapper">
-  <div class="miniMap-title">沖縄</div>
+  <div class="miniMap-title">沖縄 Okinawa</div>
   <div id="okinawaMap" class="miniMap"></div>
 </div>
 <div id="ogasawaraWrapper" class="miniMap-wrapper">
-  <div class="miniMap-title">小笠原</div>
+  <div class="miniMap-title">小笠原 Ogasawara</div>
   <div id="ogasawaraMap" class="miniMap"></div>
 </div>
 <div id="maxAlertBox" style="
