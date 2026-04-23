@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.4.6</title>
+<title>T津波マップv1.4.7</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -185,7 +185,10 @@ const tsunamiColors = {
   '73': 'rgb(60,255,255)'
 };
 // メインマップ
-const map = L.map('map').setView([35.75, 138], 5.5);
+const map = L.map('map', {
+  zoomSnap: 0,
+  zoomDelta: 0.25
+}).setView([35.75, 138], 5.5);
 
 async function loadPref() {
   map.createPane('land');
