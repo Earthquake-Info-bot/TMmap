@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.9.7</title>
+<title>T津波マップv1.9.8</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -118,7 +118,7 @@
 </div>
 <!-- 自由入力用テキストエリア -->
 <div id="mapCredit">
-  NAFY 津波マップ v1.9.7<br>
+  NAFY 津波マップ v1.9.8<br>
   --日--:--　気象庁発表
 </div>
 
@@ -334,7 +334,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
 
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
-    creditBox.innerHTML =`NAFY 津波マップ v1.9.7<br>${reportTimeFormatted}　気象庁発表`;
+    creditBox.innerHTML =`NAFY 津波マップ v1.9.8<br>${reportTimeFormatted}　気象庁発表`;
 
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
@@ -370,7 +370,7 @@ if(eq){
     }
   }
 
-  creditBox.innerHTML =`NAFY 津波マップ v1.9.7<br>
+  creditBox.innerHTML =`NAFY 津波マップ v1.9.8<br>
 ${reportTimeFormatted}　気象庁発表
 <span style="display:block; margin-top:4px;">
 ${eqTimeFormatted}発生<br>
@@ -503,7 +503,7 @@ if(lat && lon){
         }).addTo(map);
 
         // ミニマップ描画（該当コードのみ）
-        if(['772','800','802'].includes(code)){
+        if(['771','772','800','802'].includes(code)){
           L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: getWeight(f.properties.kindCode), fillOpacity:1})}).addTo(miniMapOkinawa);
         }
         if(['321'].includes(code)){
