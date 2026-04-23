@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.9.3</title>
+<title>T津波マップv1.9.4</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -118,7 +118,7 @@
 </div>
 <!-- 自由入力用テキストエリア -->
 <div id="mapCredit">
-  NAFY 津波マップ v1.9.3<br>
+  NAFY 津波マップ v1.9.4<br>
   --日--:--　気象庁発表
 </div>
 
@@ -333,7 +333,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
 
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
-    creditBox.innerHTML =`NAFY 津波マップ v1.9.3<br>${reportTimeFormatted}　気象庁発表`;
+    creditBox.innerHTML =`NAFY 津波マップ v1.9.4<br>${reportTimeFormatted}　気象庁発表`;
 
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
@@ -369,7 +369,7 @@ if(eq){
     }
   }
 
-  creditBox.innerHTML =`NAFY 津波マップ v1.9.3<br>
+  creditBox.innerHTML =`NAFY 津波マップ v1.9.4<br>
 ${reportTimeFormatted}　気象庁発表
 <span style="display:block; margin-top:4px;">
 ${eqTimeFormatted}発生<br>
@@ -400,30 +400,29 @@ if(lat && lon){
         width:${size}px;
         height:${size}px;
         position:relative;
-        transform: rotate(45deg);
       ">
         <div style="
           position:absolute;
-          top:0;
-          left:${size/2-thickness/2}px;
-          width:${thickness}px;
-          height:${size}px;
+          width:${size * 1.4}px;
+          height:${thickness}px;
           background:red;
-          border:2px solid white; /* ← 白枠 */
-          box-sizing:border-box;
+          top:50%;
+          left:50%;
+          transform:translate(-50%, -50%) rotate(45deg);
+          box-shadow: 0 0 0 2px white;
         "></div>
         <div style="
           position:absolute;
-          left:0;
-          top:${size/2-thickness/2}px;
-          width:${size}px;
+          width:${size * 1.4}px;
           height:${thickness}px;
           background:red;
-          border:2px solid white; /* ← 白枠 */
-          box-sizing:border-box;
+          top:50%;
+          left:50%;
+          transform:translate(-50%, -50%) rotate(-45deg);
+          box-shadow: 0 0 0 2px white;
         "></div>
       </div>
-    `,
+      `,
     iconSize: [size, size],
     iconAnchor: [size/2, size/2]
   });
