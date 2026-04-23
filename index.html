@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.6.3</title>
+<title>T津波マップv1.6.4</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -448,10 +448,10 @@ ${magnitude}`;
 
         // ミニマップ描画（該当コードのみ）
         if(['772','800','802'].includes(code)){
-          L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: getWeight(kc), fillOpacity:1})}).addTo(miniMapOkinawa);
+          L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: getWeight(f.properties.kindCode), fillOpacity:1})}).addTo(miniMapOkinawa);
         }
         if(['321'].includes(code)){
-          L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: getWeight(kc), fillOpacity:1})}).addTo(miniMapOgasawara);
+          L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: getWeight(f.properties.kindCode), fillOpacity:1})}).addTo(miniMapOgasawara);
         }
 
         await updateStatus(`(${i+1}/${items.length}) ${areaName}描画完了`);
