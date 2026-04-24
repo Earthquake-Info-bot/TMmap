@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>T津波マップv1.10.1</title>
+<title>T津波マップv1.10.2</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -117,7 +117,7 @@
 </div>
 <!-- 自由入力用テキストエリア -->
 <div id="mapCredit">
-  NAFY 津波マップ v1.10.1<br>
+  NAFY 津波マップ v1.10.2<br>
   --日--:--　気象庁発表
 </div>
 
@@ -139,8 +139,12 @@ document.getElementById('mapCredit').addEventListener('click', () => {
 
   if(forecastVisible){
     forecastLayerGroup.addTo(map);
+    forecastLayerGroupOkinawa.addTo(miniMapOkinawa);
+    forecastLayerGroupOgasawara.addTo(miniMapOgasawara);
   } else {
     map.removeLayer(forecastLayerGroup);
+    miniMapOkinawa.removeLayer(forecastLayerGroupOkinawa);
+    miniMapOgasawara.removeLayer(forecastLayerGroupOgasawara);
   }
 });
 </script>
@@ -186,8 +190,7 @@ const map = L.map('map', {
   zoomDelta: 0.25
 }).setView([35.75, 138], 5.5);
 
-let forecastLayerGroup = L.layerGroup().addTo(map);
-let forecastVisible = true;
+
 
 async function loadPref() {
   map.createPane('land');
@@ -253,6 +256,12 @@ const miniMapOgasawara = L.map('ogasawaraMap', {
 // ★これ追加
 addBaseMap(miniMapOkinawa);
 addBaseMap(miniMapOgasawara);
+
+let forecastLayerGroup = L.layerGroup().addTo(map);
+let forecastLayerGroupOkinawa = L.layerGroup().addTo(miniMapOkinawa);
+let forecastLayerGroupOgasawara = L.layerGroup().addTo(miniMapOgasawara);
+
+let forecastVisible = true;
 
 setTimeout(() => {
   miniMapOkinawa.invalidateSize();
@@ -346,7 +355,7 @@ const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XML
 
     // クレジット反映
     const creditBox = document.getElementById('mapCredit');
-    creditBox.innerHTML =`NAFY 津波マップ v1.10.1<br>${reportTimeFormatted}　気象庁発表`;
+    creditBox.innerHTML =`NAFY 津波マップ v1.10.2<br>${reportTimeFormatted}　気象庁発表`;
 
 // ネームスペース
 const NS_BODY = 'http://xml.kishou.go.jp/jmaxml1/body/seismology1/';
@@ -382,7 +391,7 @@ if(eq){
     }
   }
 
-  creditBox.innerHTML =`NAFY 津波マップ v1.10.1<br>
+  creditBox.innerHTML =`NAFY 津波マップ v1.10.2<br>
 ${reportTimeFormatted}　気象庁発表
 <span style="display:block; margin-top:4px;">
 ${eqTimeFormatted}発生<br>
@@ -468,7 +477,6 @@ if(lat && lon){
     zIndexOffset: 10000
   }).addTo(map);
 }
-
 }
 
     for(let i=0;i<items.length;i++){
@@ -522,10 +530,40 @@ if(lat && lon){
 
         // ミニマップ描画（該当コードのみ）
         if(['771','772','800','802'].includes(code)){
-          const okinawaLayer = L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: getWeight(f.properties.kindCode), fillOpacity:1})});
+          const okinawaLayer = L.geoJSON(geoJson, {
+            style: function(f){
+              const kc = f.properties.kindCode;
+              return {
+                color: tsunamiColors[kc] || 'gray',
+                weight: getWeight(kc),
+                fillOpacity: 1
+              };
+            }
+          });
+        
+          if(['71','72','73'].includes(kindCode)){
+            forecastLayerGroupOkinawa.addLayer(okinawaLayer);
+          } else {
+            okinawaLayer.addTo(miniMapOkinawa);
+          }
         }
+        
         if(['321'].includes(code)){
-          const ogasawaraLayer = L.geoJSON(geoJson, {style: f=>({color: tsunamiColors[f.properties.kindCode]||'gray', weight: getWeight(f.properties.kindCode), fillOpacity:1})}).addTo(miniMapOgasawara);
+          const ogasawaraLayer = L.geoJSON(geoJson, {
+            style: function(f){
+              const kc = f.properties.kindCode;
+              return {
+                color: tsunamiColors[kc] || 'gray',
+                weight: getWeight(kc),
+                fillOpacity: 1
+              };
+            }
+          });        
+          if(['71','72','73'].includes(kindCode)){
+            forecastLayerGroupOgasawara.addLayer(ogasawaraLayer);
+          } else {
+            ogasawaraLayer.addTo(miniMapOgasawara);
+          }
         }
 
         await updateStatus(`(${i+1}/${items.length}) ${areaName}描画完了`);
