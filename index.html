@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>津波マップv1.10.4</title>
+<title>津波マップv1.10.5</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -284,7 +284,7 @@ async function loadXML() {
     await updateStatus('XML取得中…');
 // ===== 情報元リンク自動取得 =====
 await updateStatus('情報元リンク取得中…');
-
+/*
 const feedRes = await fetch('https://www.data.jma.go.jp/developer/xml/feed/eqvol.xml');
 if (!feedRes.ok) throw new Error('eqvol.xml 取得失敗');
 
@@ -319,7 +319,7 @@ await updateStatus(`情報元リンク: ${targetLink}`);
 const res = await fetch(targetLink);
 if (!res.ok) throw new Error('XML取得失敗: ' + res.status);
 
-//const text = await res.text();
+const text = await res.text();*/
 const text = `<Report xmlns="http://xml.kishou.go.jp/jmaxml1/" xmlns:jmx="http://xml.kishou.go.jp/jmaxml1/">
 <Control>
 	<Title>津波警報・注意報・予報a</Title>
@@ -1289,7 +1289,8 @@ const text = `<Report xmlns="http://xml.kishou.go.jp/jmaxml1/" xmlns:jmx="http:/
 await updateStatus('XML文字列読み込み完了');
 
 const parser = new DOMParser();
-const xml = parser.parseFromString(text, 'text/xml');    await updateStatus('XMLパース完了');
+const xml = parser.parseFromString(text, 'text/xml');
+	await updateStatus('XMLパース完了');
 
     const items = xml.querySelectorAll('Item');
     await updateStatus(`XML処理完了: ${items.length}件見つかりました`);
